@@ -1,4 +1,4 @@
-from queue import PriorityQueue
+from heapq import heappush, heappop
 import sys
 
 og_grid = [[*map(int, line.strip())] for line in sys.stdin]
@@ -21,26 +21,19 @@ inf = float("infinity")
 
 neighbors = lambda x, y: [(x + dx, y + dy) for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]if 0 <= x + dx < maxx and 0 <= y + dy < maxy]
 
-distances = {(0, 0): 0, (1, 0): grid[1][0], (0, 1): grid[0][1]}
-visited = set()
-edges = neighbors(0, 0)
-edges_set = set(edges)
+distances = {(0, 0): 0}
+edges = [(0, (0, 0))]
 key = lambda coords: distances.get(coords, inf)
 
 while edges:
-    edges.sort(key=key, reverse=True)
-    # edges = sorted(set(edges), key=key)
-    node = edges.pop()
-    visited.add(node)
+    _, node = heappop(edges)
+    if node == (maxx - 1, maxy - 1):
+        print(distances[node])
+        exit()
+
     for neighbor in neighbors(*node):
-        if neighbor not in visited:
-            if neighbor not in edges_set:
-                edges.append(neighbor)
-                edges_set.add(neighbor)
-            x, y = neighbor
-            dist = distances[node] + grid[x][y]
-            if dist < distances.get(neighbor, inf):
-                distances[neighbor] = dist
-
-
-print(distances[(maxx - 1, maxy - 1)])
+        x, y = neighbor
+        dist = distances[node] + grid[x][y]
+        if dist < distances.get(neighbor, inf):
+            distances[neighbor] = dist
+            heappush(edges, (key(neighbor), neighbor))
