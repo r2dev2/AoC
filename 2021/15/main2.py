@@ -24,15 +24,19 @@ neighbors = lambda x, y: [(x + dx, y + dy) for dx, dy in [(0, 1), (0, -1), (1, 0
 distances = {(0, 0): 0, (1, 0): grid[1][0], (0, 1): grid[0][1]}
 visited = set()
 edges = neighbors(0, 0)
+edges_set = set(edges)
 key = lambda coords: distances.get(coords, inf)
 
 while edges:
-    edges = sorted(set(edges), key=key)
-    node = edges.pop(0)
+    edges.sort(key=key, reverse=True)
+    # edges = sorted(set(edges), key=key)
+    node = edges.pop()
     visited.add(node)
     for neighbor in neighbors(*node):
         if neighbor not in visited:
-            edges.append(neighbor)
+            if neighbor not in edges_set:
+                edges.append(neighbor)
+                edges_set.add(neighbor)
             x, y = neighbor
             dist = distances[node] + grid[x][y]
             if dist < distances.get(neighbor, inf):
