@@ -37,6 +37,25 @@ impl Target {
     }
 }
 
+fn _can_hit(c: i32, vc: i32, c0: i32, cf: i32, no_hope: fn (i32, i32, i32, i32) -> bool, update_v: fn (i32) -> i32) -> bool {
+    if c0 <= c && c <= cf {
+        true
+    } else if no_hope(c, vc, c0, cf) {
+        false
+    } else {
+        _can_hit(c + vc, update_v(vc), c0, cf, no_hope, update_v)
+    }
+
+}
+
+fn can_hit_x(vx: i32, target: &Target) -> bool {
+    _can_hit(0, vx, target.x0, target.xf, |x, v, x0, xf| x > xf || x < x0 && v <= 0, |v| cmp::max(0, v - 1))
+}
+
+fn can_hit_y(vy: i32, target: &Target) -> bool {
+    _can_hit(0, vy, target.y0, target.yf, |y, _v, y0, _yf| y < y0, |v| v - 1)
+}
+
 fn optimal_vx(vx: i32, target: i32, dist: i32) -> (i32, i32) {
     if dist >= target {
         (vx - 1, dist)
@@ -61,7 +80,7 @@ fn hits_target(probe: Probe, target: &Target, highest_y: i32) -> (bool, i32) {
 }
 
 fn p1(target: &Target) -> Result<i32, &'static str> {
-    let (vx, _dist) = optimal_vx(0, target.x0, 0);
+    let vx = optimal_vx(0, target.x0, 0).0;
     let mut highest_y = 0;
     for vy in 0..100 {
         let (hits, hy) = hits_target(Probe { x: 0, y: 0, vx, vy }, &target, 0);
@@ -73,15 +92,16 @@ fn p1(target: &Target) -> Result<i32, &'static str> {
 }
 
 fn p2(target: &Target) -> Result<i32, &'static str> {
-    let mut unique_velocities = 0;
-    for vy in -100..100 {
-        for vx in 0..300 {
-            if hits_target(Probe { x: 0, y: 0, vx, vy }, &target, 0).0 {
-                unique_velocities += 1;
-            }
-        }
-    }
-    Ok(unique_velocities)
+    let possible_vy = (-100..100)
+        .filter(|vy| can_hit_y(*vy, &target))
+        .collect::<Vec<i32>>();
+    let unique_velocities = (0..300)
+        .filter(|vx| can_hit_x(*vx, &target))
+        .map(|vx| possible_vy.iter().map(|vy| (vx, *vy)).collect::<Vec<(i32, i32)>>())
+        .flatten()
+        .filter(|vs| hits_target(Probe { x: 0, y: 0, vx: vs.0, vy: vs.1 }, &target, 0).0)
+        .count();
+    Ok(unique_velocities as i32)
 }
 
 fn main() -> Result<(), &'static str> {
