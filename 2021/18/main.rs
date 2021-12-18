@@ -125,9 +125,18 @@ fn p1(nums: &Vec<Vec<PairNumber>>) -> Result<i32, &'static str> {
     }
 }
 
+fn p2(nums: &Vec<Vec<PairNumber>>) -> Result<i32, &'static str> {
+    let res = nums
+        .into_iter()
+        .flat_map(|n1| nums.into_iter().map(move |n2| magnitude(&reduce(&add(&n1, &n2)))))
+        .max();
+    Ok(res.unwrap())
+}
+
 fn main() -> Result<(), &'static str> {
     let sample = include_str!("./nums.txt");
     let snail_nums = sample.lines().map(parse_snail_num).collect::<Vec<Vec<PairNumber>>>();
     println!("Part 1: {}", p1(&snail_nums)?);
+    println!("Part 2: {}", p2(&snail_nums)?);
     Ok(())
 }
