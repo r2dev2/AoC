@@ -97,8 +97,7 @@ fn p2(target: &Target) -> Result<i32, &'static str> {
         .collect::<Vec<i32>>();
     let unique_velocities = (0..300)
         .filter(|vx| can_hit_x(*vx, &target))
-        .map(|vx| possible_vy.iter().map(|vy| (vx, *vy)).collect::<Vec<(i32, i32)>>())
-        .flatten()
+        .flat_map(|vx| possible_vy.iter().map(move |vy| (vx, *vy)))
         .filter(|vs| hits_target(Probe { x: 0, y: 0, vx: vs.0, vy: vs.1 }, &target, 0).0)
         .count();
     Ok(unique_velocities as i32)
