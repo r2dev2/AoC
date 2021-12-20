@@ -96,16 +96,18 @@ fn matched_beacons(scanner1: &Vec<Coord>, scanner2: &Vec<Coord>) -> Option<(i32,
     None
 }
 
-fn part1(input: &str) -> Result<i32, &'static str> {
+fn sol(input: &str) -> Result<(i32, i32), &'static str> {
     let scanners = parse_scanners(&input);
     let mut cont = true;
-    let mut to_visit = (0..scanners.len()).collect::<BTreeSet<_>>();
+    let mut to_visit = (0..scanners.len()).collect::<HashSet<_>>();
     let mut detected_beacons: HashSet<Coord> = scanners[0].iter().cloned().collect();
+    let mut detected_scanners = HashSet::<Coord>::new();
     // let mut detected_beacons: HashSet<(i32, Coord)> = HashSet::new();// scanners[0].iter().collect();
 
     // while !to_visit.is_empty() {
     while cont {
         cont = false;
+        println!("Need to visit {} scanners", to_visit.len());
         for i in to_visit.clone() {
             let s = &scanners[i];
             let d_v: Vec<Coord> = detected_beacons.iter().cloned().collect();
@@ -128,26 +130,26 @@ fn part1(input: &str) -> Result<i32, &'static str> {
                         // println!("[DUPLICATE]");
                     }
                 }
+                detected_scanners.insert(diff);
                 to_visit.remove(&i);
             }
         }
     }
 
-    // let mut ss = scanners[2].iter().map(|c| add(&(1105, -1205, 1229), &transform_coord(c, 1, 4))).collect::<Vec<_>>() ;
-    // let mut ss = scanners[2].iter().map(|c| transform_coord(&add(&(1105, -1205, 1229), c).collect::<Vec<_>>() ;
-    // ss.sort();
-    // for c in ss {
-    //     println!("{:?}", c);
-    // }
+    let max_dist = detected_scanners
+        .iter()
+        .flat_map(|s1| detected_scanners.iter().map(move |s2| sub(s1, s2)))
+        .map(|diff| diff.0.abs() + diff.1.abs() + diff.2.abs())
+        .max();
 
     // println!("Detected {} unique beacons", detected_beacons.len());
     // println!("Got {} coords", scanners.iter().flatten().map(|_x| 1).sum::<i32>());
 
-    Ok(detected_beacons.len() as i32)
+    Ok((detected_beacons.len() as i32, max_dist.unwrap()))
 }
 
 fn main() -> Result<(), &'static str> {
     let input = include_str!("./scanners.txt");
-    println!("Part 1: {}", part1(&input)?);
+    println!("{:?}", sol(&input)?);
     Ok(())
 }
